@@ -2,13 +2,21 @@ import aiohttp
 from PIL import Image
 import io
 import time
-from openai import AsyncOpenAI
+import base64
+from openai import AsyncOpenAI, AsyncStream
 
 import json
 from collections.abc import AsyncGenerator
 
-from dailyai.services.ai_services import LLMService, ImageGenService
+from openai.types.chat import (
+    ChatCompletion,
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+)
+
+from dailyai.services.ai_services import LLMService, ImageGenService, VisionService
 from dailyai.services.openai_api_llm_service import BaseOpenAILLMService
+from dailyai.pipeline.frames import TextFrame
 
 
 class OpenAILLMService(BaseOpenAILLMService):
@@ -50,3 +58,41 @@ class OpenAIImageGenService(ImageGenService):
             image_stream = io.BytesIO(await response.content.read())
             image = Image.open(image_stream)
             return (image_url, image.tobytes())
+
+
+class OpenAIVisionService(VisionService):
+    def __init__(
+        self,
+        *,
+        model="gpt-4-vision-preview",
+        api_key,
+    ):
+        self._model = model
+        self._client = AsyncOpenAI(api_key=api_key)
+
+    async def run_vision(self, prompt: str, image: bytes):
+        base64_image = base64.b64encode(image).decode('utf-8')
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
+                        },
+                    },
+                ],
+            }
+        ]
+        chunks: AsyncStream[ChatCompletionChunk] = (
+            await self._client.chat.completions.create(
+                model=self._model,
+                stream=True,
+                messages=messages,
+            )
+        )
+        async for chunk in chunks:
+            print(f"!!! chunk: {chunk}")
+            yield TextFrame(chunk)

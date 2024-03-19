@@ -90,7 +90,8 @@ class BaseTransportService:
         self._vad_stop_s = kwargs.get("vad_stop_s") or 0.8
         self._context = kwargs.get("context") or []
         self._vad_enabled = kwargs.get("vad_enabled") or False
-
+        self._receive_video = kwargs.get("receive_video") or False
+        self._receive_video_fps = kwargs.get("receive_video_fps") or 1.0
         if self._vad_enabled and self._speaker_enabled:
             raise Exception(
                 "Sorry, you can't use speaker_enabled and vad_enabled at the same time. Please set one to False."

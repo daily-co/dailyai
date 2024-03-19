@@ -18,6 +18,7 @@ from dailyai.pipeline.frames import (
     Frame,
     TextFrame,
     TranscriptionQueueFrame,
+    VisionFrame
 )
 
 from abc import abstractmethod
@@ -131,6 +132,22 @@ class STTService(AIService):
         content.seek(0)
         text = await self.run_stt(content)
         yield TranscriptionQueueFrame(text, "", str(time.time()))
+
+
+class VisionService(AIService):
+    def __init__(self):
+        super().__init__()
+
+    # Renders the image. Returns an Image object.
+    # TODO-CB: return type
+    @abstractmethod
+    async def run_vision(self, prompt: str, image: bytes):
+        pass
+
+    async def process_frame(self, frame: Frame) -> AsyncGenerator[Frame, None]:
+        if isinstance(frame, VisionFrame):
+            async for frame in self.run_vision(frame.prompt, frame.image):
+                yield frame
 
 
 class FrameLogger(AIService):

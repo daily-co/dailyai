@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import logging
 import signal
+import time
 import threading
 import types
 
@@ -11,6 +12,7 @@ from typing import Any
 from dailyai.pipeline.frames import (
     ReceivedAppMessageFrame,
     TranscriptionQueueFrame,
+    VideoImageFrame
 )
 
 from threading import Event
@@ -62,6 +64,7 @@ class DailyTransportService(BaseTransportService, EventHandler):
 
         self._other_participant_has_joined = False
         self._my_participant_id = None
+        self._participant_frame_times = {}
 
         self.transcription_settings = {
             "language": "en",
@@ -204,11 +207,12 @@ class DailyTransportService(BaseTransportService, EventHandler):
         )
         self._my_participant_id = self.client.participants()["local"]["id"]
 
-        self.client.update_subscription_profiles({
-            "base": {
-                "camera": "unsubscribed",
-            }
-        })
+        if not self._receive_video:
+            self.client.update_subscription_profiles({
+                "base": {
+                    "camera": "unsubscribed",
+                }
+            })
 
         if self._token and self._start_transcription:
             self.client.start_transcription(self.transcription_settings)
@@ -224,6 +228,16 @@ class DailyTransportService(BaseTransportService, EventHandler):
     def _post_run(self):
         self.client.leave()
         self.client.release()
+
+    def _handle_video_frame(self, participant_id, video_frame):
+        # TODO-CB: What about multiple participants?
+        if (not participant_id in self._participant_frame_times) or (time.time() > self._participant_frame_times[participant_id] + 1.0/self._receive_video_fps):
+            print(f"### sending frame now")
+            self._participant_frame_times[participant_id] = time.time()
+            asyncio.run_coroutine_threadsafe(
+                self.receive_queue.put(
+                    VideoImageFrame(participant_id, video_frame)), self._loop
+            )
 
     def on_first_other_participant_joined(self):
         pass
@@ -248,6 +262,9 @@ class DailyTransportService(BaseTransportService, EventHandler):
         if not self._other_participant_has_joined and participant["id"] != self._my_participant_id:
             self._other_participant_has_joined = True
             self.on_first_other_participant_joined()
+        if self._receive_video:
+            self.client.set_video_renderer(
+                participant["id"], self._handle_video_frame)
 
     def on_participant_left(self, participant, reason):
         if len(self.client.participants()) < self._min_others_count + 1:
