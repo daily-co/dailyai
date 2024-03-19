@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import logging
 import signal
+import time
 import threading
 import types
 
@@ -11,6 +12,7 @@ from typing import Any
 from dailyai.pipeline.frames import (
     ReceivedAppMessageFrame,
     TranscriptionQueueFrame,
+    VideoImageFrame
 )
 
 from threading import Event
@@ -204,11 +206,12 @@ class DailyTransportService(BaseTransportService, EventHandler):
         )
         self._my_participant_id = self.client.participants()["local"]["id"]
 
-        self.client.update_subscription_profiles({
-            "base": {
-                "camera": "unsubscribed",
-            }
-        })
+        if not self._receive_video:
+            self.client.update_subscription_profiles({
+                "base": {
+                    "camera": "unsubscribed",
+                }
+            })
 
         if self._token and self._start_transcription:
             self.client.start_transcription(self.transcription_settings)
@@ -224,6 +227,31 @@ class DailyTransportService(BaseTransportService, EventHandler):
     def _post_run(self):
         self.client.leave()
         self.client.release()
+
+    def _handle_video_frame(self, participant_id, video_frame):
+        """If receive_video is true, this function is called once for each frame from each participant. We
+         don't need to send every frame to the pipeline, so there are two ways to decide how to send frames:
+         1. Set a greater-than-zero value for receive_video_fps. The transport will track the last send time
+            for each participant and send a new frame when the requested frame rate has elapsed. This
+            guarantees an image every second, for example.
+         2. Set receive_video_fps less than or equal to zero to disable timed frame sending. Then, put a
+            RequestVideoImageFrame in the pipeline to get a new frame for one or all participants. By
+            sending a RequestVideoImageFrame immediately after successfully processing an image, you can
+            ensure you don't end up queueing up frames faster than you can process them.
+            """
+        send_frame = False
+        if not participant_id in self._participant_frame_times:
+            # then it's a new participant; send the first frame
+            send_frame = True
+        elif self._receive_video_fps > 0 and time.time() > self._participant_frame_times[participant_id] + 1.0/self._receive_video_fps:
+            # Then it's an existing participant who is due to send a new frame
+            send_frame = True
+
+        if send_frame:
+            self._participant_frame_times[participant_id] = time.time()
+            future = asyncio.run_coroutine_threadsafe(
+                self.receive_queue.put(
+                    VideoImageFrame(participant_id, video_frame)), self._loop)
 
     def on_first_other_participant_joined(self):
         pass
@@ -248,6 +276,9 @@ class DailyTransportService(BaseTransportService, EventHandler):
         if not self._other_participant_has_joined and participant["id"] != self._my_participant_id:
             self._other_participant_has_joined = True
             self.on_first_other_participant_joined()
+        if self._receive_video:
+            self.client.set_video_renderer(
+                participant["id"], self._handle_video_frame)
 
     def on_participant_left(self, participant, reason):
         if len(self.client.participants()) < self._min_others_count + 1:

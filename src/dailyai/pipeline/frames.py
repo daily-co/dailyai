@@ -179,3 +179,29 @@ class LLMFunctionCallFrame(Frame):
     """Emitted when the LLM has received an entire function call completion."""
     function_name: str
     arguments: str
+
+
+@dataclass()
+class VideoImageFrame(Frame):
+    """Contains a still image from a partcipant's video stream."""
+    participantId: str
+    image: bytes
+
+    # def __str__(self):
+    #     return f"{self.__class__.__name__}, participantId: {self.participantId}, image size: {len(self.image)} B"
+
+
+@dataclass()
+class VisionFrame(Frame):
+    prompt: str
+    image: bytes
+
+    # def __str__(self):
+    #     return f"{self.__class__.__name__}, prompt: {self.prompt}, image size: {len(self.image)} B"
+
+
+@dataclass()
+class RequestVideoImageFrame(Frame):
+    """Send to the transport to request a new video image from a specific participant. Leave participantId
+    empty to request a frame from all participants."""
+    participantId: str | None

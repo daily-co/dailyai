@@ -24,6 +24,7 @@ from dailyai.pipeline.frames import (
     TextFrame,
     UserStartedSpeakingFrame,
     UserStoppedSpeakingFrame,
+    RequestVideoImageFrame
 )
 from dailyai.pipeline.pipeline import Pipeline
 from dailyai.services.ai_services import TTSService
@@ -90,7 +91,9 @@ class BaseTransportService:
         self._vad_stop_s = kwargs.get("vad_stop_s") or 0.8
         self._context = kwargs.get("context") or []
         self._vad_enabled = kwargs.get("vad_enabled") or False
-
+        self._receive_video = kwargs.get("receive_video") or False
+        self._receive_video_fps = kwargs.get("receive_video_fps") or 0.0
+        self._participant_frame_times = {}
         if self._vad_enabled and self._speaker_enabled:
             raise Exception(
                 "Sorry, you can't use speaker_enabled and vad_enabled at the same time. Please set one to False."
@@ -441,6 +444,7 @@ class BaseTransportService:
                     # discard them
                     if not self._is_interrupted.is_set():
                         if frame:
+
                             if isinstance(frame, AudioFrame):
                                 chunk = frame.data
 
@@ -459,6 +463,15 @@ class BaseTransportService:
                             elif isinstance(frame, SendAppMessageFrame):
                                 self.send_app_message(
                                     frame.message, frame.participantId)
+                            elif isinstance(frame, RequestVideoImageFrame):
+                                # removing one or all participant IDs from _participant_frame_times
+                                # will cause the transport to send the next available frame from
+                                # that participant
+                                if frame.participantId:
+                                    self._participant_frame_times.pop(
+                                        frame.participantId, None)
+                                else:
+                                    self._participant_frame_times.clear()
                         elif len(b):
                             self.write_frame_to_mic(bytes(b))
                             b = bytearray()

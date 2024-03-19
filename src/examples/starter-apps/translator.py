@@ -26,7 +26,8 @@ logger.setLevel(logging.DEBUG)
 
 """
 This example looks a bit different than the chatbot example, because it isn't waiting on the user to stop talking to start translating.
-It also isn't saving what the user or bot says into the context object for use in subsequent interactions.
+It also isn't saving what the user or bot says into the context object for use in subsequent interactions. This example also sends
+the translated text back to the transport as an App Message, so clients can show subtitles.
 """
 
 
@@ -46,6 +47,20 @@ class TranslationProcessor(FrameProcessor):
                 {"role": "user", "content": frame.text},
             ]
             yield LLMMessagesQueueFrame(context)
+        else:
+            yield frame
+
+
+class TranslationSubtitles(FrameProcessor):
+    def __init__(self, language):
+        self._language = language
+
+    async def process_frame(self, frame: Frame) -> AsyncGenerator[Frame, None]:
+        if isinstance(frame, TextFrame):
+            app_message = {
+                "language": self._language,
+                "text": frame.text
+            }
         else:
             yield frame
 
@@ -73,7 +88,8 @@ async def main(room_url: str, token):
             model="gpt-4-turbo-preview")
         sa = SentenceAggregator()
         tp = TranslationProcessor("Spanish")
-        pipeline = Pipeline([sa, tp, llm, tts])
+        ts = TranslationSubtitles("Spanish")
+        pipeline = Pipeline([sa, tp, llm, tts, ts])
 
         transport.transcription_settings["extra"]["endpointing"] = True
         transport.transcription_settings["extra"]["punctuate"] = True

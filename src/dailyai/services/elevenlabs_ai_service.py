@@ -35,6 +35,7 @@ class ElevenLabsTTSService(TTSService):
             "xi-api-key": self._api_key,
             "Content-Type": "application/json",
         }
+
         async with self._aiohttp_session.post(
             url, json=payload, headers=headers, params=querystring
         ) as r:
