@@ -27,6 +27,7 @@ dependencies = [
     "fal",
     "faster_whisper",
     "google-cloud-texttospeech",
+    "lmnt",
     "numpy",
     "openai",
     "Pillow",

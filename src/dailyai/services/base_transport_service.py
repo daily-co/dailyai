@@ -409,6 +409,7 @@ class BaseTransportService:
             try:
                 frames_or_frame: Frame | list[Frame] = self._threadsafe_send_queue.get(
                 )
+                print(f"!!! frames_or_frame is {frames_or_frame}")
                 if (
                     isinstance(frames_or_frame, AudioFrame)
                     and len(frames_or_frame.data) > largest_write_size

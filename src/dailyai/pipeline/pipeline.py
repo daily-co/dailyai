@@ -2,7 +2,7 @@ import asyncio
 from typing import AsyncGenerator, AsyncIterable, Iterable, List
 from dailyai.pipeline.frame_processor import FrameProcessor
 
-from dailyai.pipeline.frames import EndPipeFrame, EndFrame, Frame
+from dailyai.pipeline.frames import EndPipeFrame, EndFrame, Frame, ControlFrame
 
 
 class Pipeline:
@@ -111,3 +111,20 @@ class Pipeline:
                     yield final_frame
         else:
             yield initial_frame
+
+
+class CustomPipeline(Pipeline):
+    """Used for services that don't neatly map to the frame processor model
+    of standard pipelines. For example, LMNT's full-duplex TTS streaming."""
+    # TODO-CB: Maybe this is a BasePipeline?
+
+    def __init__(self,
+                 source: asyncio.Queue | None = None,
+                 sink: asyncio.Queue[Frame] | None = None):
+        super().__init__(processors=[], source=source, sink=sink)
+
+    def run_pipeline(self):
+        """Right now, we'll override this in a subclass and
+        access the source and sink queues directly, but I
+        might need to clean that up later."""
+        pass
