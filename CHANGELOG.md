@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed an issue introduced in 0.0.33 that would cause the LLM to generate
   shorter output.
 
+### Changed
+
+- Updated OpenAI SDK Requirements from 1.26.0 to 1.27.0
+
 ## [0.0.33] - 2024-06-25
 
 ### Changed

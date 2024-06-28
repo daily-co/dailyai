@@ -288,7 +288,7 @@ nvidia-nvtx-cu12==12.1.105
     # via torch
 onnxruntime==1.18.0
     # via faster-whisper
-openai==1.26.0
+openai==1.27.0
     # via
     #   langchain-openai
     #   openpipe

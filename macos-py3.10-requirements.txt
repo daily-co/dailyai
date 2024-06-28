@@ -254,7 +254,7 @@ numpy==1.26.4
     #   transformers
 onnxruntime==1.18.0
     # via faster-whisper
-openai==1.26.0
+openai==1.27.0
     # via
     #   langchain-openai
     #   openpipe
