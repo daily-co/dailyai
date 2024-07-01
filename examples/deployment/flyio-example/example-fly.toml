@@ -1,0 +1,25 @@
+# fly.toml app configuration file generated for pipecat-fly-example on 2024-07-01T15:04:53+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'pipecat-fly-example'
+primary_region = 'sjc'
+
+[build]
+
+[env]
+  FLY_APP_NAME = 'pipecat-fly-example'
+
+[http_service]
+  internal_port = 7860
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = 512
+  cpu_kind = 'shared'
+  cpus = 1
