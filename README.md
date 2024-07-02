@@ -39,7 +39,7 @@ pip install "pipecat-ai[option,...]"
 
 Your project may or may not need these, so they're made available as optional requirements. Here is a list:
 
-- **AI services**: `anthropic`, `azure`, `deepgram`, `google`, `fal`, `moondream`, `openai`, `openpipe`, `playht`, `silero`, `whisper`, `xtts`
+- **AI services**: `anthropic`, `azure`, `deepgram`, `gladia`, `google`, `fal`, `moondream`, `openai`, `openpipe`, `playht`, `silero`, `whisper`, `xtts`
 - **Transports**: `local`, `websocket`, `daily`
 
 ## Code examples
