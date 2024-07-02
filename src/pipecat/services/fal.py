@@ -56,7 +56,7 @@ class FalImageGenService(ImageGenService):
 
         response = await fal_client.run_async(
             self._model,
-            arguments={"prompt": prompt, **self._params.model_dump()}
+            arguments={"prompt": prompt, **self._params.model_dump(exclude_none=True)}
         )
 
         image_url = response["images"][0]["url"] if response else None

@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `GladiaSTTService`.
+  See https://docs.gladia.io/chapters/speech-to-text-api/pages/live-speech-recognition
+
 - Added `XTTSService`. This is a local Text-To-Speech service.
   See https://github.com/coqui-ai/TTS
 

@@ -9,7 +9,7 @@ import asyncio
 import time
 
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Mapping
+from typing import Any, Awaitable, Callable, Mapping, Optional
 from concurrent.futures import ThreadPoolExecutor
 
 from daily import (
@@ -101,7 +101,7 @@ class DailyTranscriptionSettings(BaseModel):
 class DailyParams(TransportParams):
     api_url: str = "https://api.daily.co/v1"
     api_key: str = ""
-    dialin_settings: DailyDialinSettings | None = None
+    dialin_settings: Optional[DailyDialinSettings] = None
     transcription_enabled: bool = False
     transcription_settings: DailyTranscriptionSettings = DailyTranscriptionSettings()
 
@@ -265,7 +265,7 @@ class DailyTransportClient(EventHandler):
                     logger.info(
                         f"Enabling transcription with settings {self._params.transcription_settings}")
                     self._client.start_transcription(
-                        self._params.transcription_settings.model_dump())
+                        self._params.transcription_settings.model_dump(exclude_none=True))
 
                 await self._callbacks.on_joined(data["participants"]["local"])
             else:
