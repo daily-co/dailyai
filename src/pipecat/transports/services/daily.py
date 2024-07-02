@@ -199,6 +199,9 @@ class DailyTransportClient(EventHandler):
         self._callbacks = callbacks
 
     async def send_message(self, frame: DailyTransportMessageFrame):
+        if not self._client:
+            return
+
         future = self._loop.create_future()
         self._client.send_app_message(
             frame.message,

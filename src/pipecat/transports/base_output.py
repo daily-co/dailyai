@@ -14,6 +14,7 @@ from typing import List
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.frames.frames import (
     AudioRawFrame,
+    BotSpeakingFrame,
     CancelFrame,
     MetricsFrame,
     SpriteFrame,
@@ -263,4 +264,5 @@ class BaseOutputTransport(FrameProcessor):
         if len(buffer) >= self._audio_chunk_size:
             await self.write_raw_audio_frames(bytes(buffer[:self._audio_chunk_size]))
             buffer = buffer[self._audio_chunk_size:]
+            await self.push_frame(BotSpeakingFrame(), FrameDirection.UPSTREAM)
         return buffer

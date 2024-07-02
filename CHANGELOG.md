@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `UserIdleProcessor`. This processor can be used to wait for any
+  interaction with the user. If the user doesn't say anything within a given
+  timeout a provided callback is called.
+
+- Added `IdleFrameProcessor`. This processor can be used to wait for frames
+  within a given timeout. If no frame is received within the timeout a provided
+  callback is called.
+
+- Added new frame `BotSpeakingFrame`. This frame will be continuously pushed
+  upstream while the bot is talking.
+
 - Added `XTTSService`. This is a local Text-To-Speech service.
   See https://github.com/coqui-ai/TTS
 
@@ -44,6 +55,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed an issue in `FastAPIWebsocketTransport` where it would still try to send
   data to the websocket after being closed.
+
+### Other
+
+- Added new `17-detect-user-idle.py` example that shows how to use the new
+  `UserIdleProcessor`.
 
 ## [0.0.35] - 2024-06-28
 
